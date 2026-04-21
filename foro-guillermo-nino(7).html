@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foro · Guillermo Niño</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--card:#141414;--surface:#1c1c1c;--border:#2a2a2a;--text:#f0f0f0;--muted:#666;--accent:#2563eb;--red:#e84d8a;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;}
+.modal-bg.hidden{display:none;}
+.modal{background:#141414;border:1px solid #2a2a2a;border-radius:20px;padding:28px 22px;width:100%;max-width:360px;text-align:center;}
+.modal h2{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:6px;}
+.modal p{color:#666;font-size:0.82rem;margin-bottom:18px;line-height:1.5;}
+.av-grid{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:16px;}
+.av-opt{font-size:1.4rem;padding:5px 7px;border-radius:10px;border:2px solid transparent;cursor:pointer;transition:all .15s;}
+.av-opt.sel{border-color:#2563eb;background:#1a2540;}
+.modal-input{width:100%;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:12px;color:#f0f0f0;font-family:'Nunito',sans-serif;font-size:0.95rem;padding:11px 14px;outline:none;margin-bottom:14px;transition:border-color .2s;}
+.modal-input:focus{border-color:#2563eb;}
+.modal-input::placeholder{color:#555;}
+.btn-enter{width:100%;background:#2563eb;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;padding:12px;border:none;border-radius:12px;cursor:pointer;}
+.btn-enter:hover{background:#1d4ed8;}
+
+/* HEADER */
+header{background:#0e0e0e;border-bottom:1px solid #2a2a2a;padding:0 18px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;background:#2563eb;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;}
+.logo-text em{color:#2563eb;font-style:normal;}
+.user-chip{display:flex;align-items:center;gap:6px;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:20px;padding:5px 10px;font-size:0.78rem;color:#aaa;font-weight:600;cursor:pointer;}
+.user-chip:hover{border-color:#2563eb;color:#fff;}
+
+/* LAYOUT */
+.layout{max-width:620px;margin:0 auto;padding:20px 14px 80px;}
+
+/* FORM */
+.post-form{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;}
+.form-top{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;}
+.my-av{width:40px;height:40px;border-radius:50%;background:#1c1c1c;border:2px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+textarea{flex:1;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:14px;color:#f0f0f0;font-family:'Nunito',sans-serif;font-size:0.92rem;padding:10px 14px;resize:none;min-height:44px;outline:none;transition:border-color .2s,min-height .2s;}
+textarea:focus{border-color:#2563eb;min-height:80px;}
+textarea::placeholder{color:#555;}
+.divider{border:none;border-top:1px solid #2a2a2a;margin:0 0 12px;}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.cat-btn{background:#1c1c1c;border:1px solid #2a2a2a;color:#666;font-family:'Nunito',sans-serif;font-size:0.74rem;font-weight:700;padding:4px 11px;border-radius:20px;cursor:pointer;transition:all .15s;}
+.cat-btn:hover,.cat-btn.active{border-color:#2563eb;color:#2563eb;background:#1a2540;}
+.form-bottom{display:flex;justify-content:flex-end;}
+.btn-pub{background:#2563eb;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.88rem;padding:9px 22px;border:none;border-radius:10px;cursor:pointer;}
+.btn-pub:hover:not(:disabled){background:#1d4ed8;}
+.btn-pub:disabled{opacity:.5;cursor:default;}
+
+/* FILTERS */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.ftab{background:#141414;border:1px solid #2a2a2a;color:#666;font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:700;padding:5px 13px;border-radius:20px;cursor:pointer;transition:all .15s;}
+.ftab.active{background:#2563eb;color:#fff;border-color:#2563eb;}
+
+/* LOADER */
+#loader{text-align:center;padding:40px;color:#555;font-size:.88rem;}
+.spinner{width:30px;height:30px;border:3px solid #2a2a2a;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* CARDS */
+.post-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:12px;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.post-body{padding:14px 16px 10px;}
+.post-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;border:2px solid #2a2a2a;}
+.post-info{flex:1;min-width:0;}
+.post-nick{font-weight:700;font-size:0.87rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.post-time{color:#555;font-size:0.72rem;}
+.post-cat{font-size:0.69rem;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.post-text{font-size:0.94rem;line-height:1.65;color:#d0d0d0;margin-bottom:10px;white-space:pre-wrap;word-break:break-word;}
+.post-actions{display:flex;gap:2px;padding-top:8px;border-top:1px solid #2a2a2a;}
+.act-btn{background:none;border:none;color:#555;font-family:'Nunito',sans-serif;font-size:0.84rem;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;}
+.act-btn:hover{background:#1c1c1c;color:#f0f0f0;}
+.act-btn.liked{color:var(--red);}
+
+/* COMMENTS */
+.comments-section{border-top:1px solid #2a2a2a;background:#111;}
+.comments-list{padding:10px 16px;display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;}
+.comment{display:flex;gap:8px;animation:fadeUp .2s ease;}
+.c-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;margin-top:2px;border:1px solid #2a2a2a;}
+.c-bubble{background:#1c1c1c;border:1px solid #2a2a2a;border-radius:0 10px 10px 10px;padding:7px 11px;flex:1;}
+.c-nick{font-size:0.74rem;font-weight:700;margin-bottom:2px;}
+.c-text{font-size:0.86rem;color:#c0c0c0;line-height:1.5;word-break:break-word;}
+.comment-form{display:flex;gap:8px;padding:8px 16px 12px;}
+.c-input{flex:1;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:20px;color:#f0f0f0;font-family:'Nunito',sans-serif;font-size:0.84rem;padding:8px 13px;outline:none;transition:border-color .2s;}
+.c-input:focus{border-color:#2563eb;}
+.c-input::placeholder{color:#555;}
+.btn-send{background:#2563eb;border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:.95rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.btn-send:hover{background:#1d4ed8;}
+
+.audio-player{width:100%;margin-bottom:10px;border-radius:8px;accent-color:#2563eb;background:#1c1c1c;}
+.audio-wrap{background:#1c1c1c;border:1px solid #2a2a2a;border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.audio-wrap span{font-size:1.2rem;}
+.audio-wrap audio{flex:1;height:32px;}
+.empty{text-align:center;padding:50px 20px;color:#555;}
+.empty div{font-size:2.2rem;margin-bottom:10px;}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:#f0f0f0;color:#0a0a0a;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.84rem;padding:10px 22px;border-radius:30px;transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:998;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- PANTALLA CONTRASEÑA -->
+<div id="passBg" style="position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;">
+  <div style="background:#141414;border:1px solid #2a2a2a;border-radius:20px;padding:32px 24px;width:100%;max-width:340px;text-align:center;">
+    <div style="font-size:2.2rem;margin-bottom:12px;">🔐</div>
+    <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:6px;">Panel Admin</h2>
+    <p style="color:#666;font-size:0.82rem;margin-bottom:20px;">Solo para administradores</p>
+    <input id="passInput" type="password" placeholder="Contraseña" maxlength="30"
+      style="width:100%;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:12px;color:#f0f0f0;font-family:'Nunito',sans-serif;font-size:0.95rem;padding:11px 14px;outline:none;margin-bottom:12px;transition:border-color .2s;">
+    <button id="passBtn" style="width:100%;background:#2563eb;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;padding:12px;border:none;border-radius:12px;cursor:pointer;">Entrar</button>
+    <div id="passErr" style="color:#e84d8a;font-size:0.8rem;margin-top:10px;display:none;">Contraseña incorrecta ❌</div>
+  </div>
+</div>
+
+<!-- MODAL NOMBRE -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div style="font-size:2.2rem;margin-bottom:10px">🏫</div>
+    <h2>Foro Guillermo Niño</h2>
+    <p>Elige tu avatar y un apodo.<br>Nadie sabrá quién eres realmente.</p>
+    <div class="av-grid" id="avGrid"></div>
+    <input class="modal-input" id="nickInput" placeholder="Tu apodo (ej: Lobo Curioso)" maxlength="20">
+    <button class="btn-enter" id="btnEnter">Entrar al foro →</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🏫</div>
+    <div class="logo-text">Guillermo <em>Niño</em></div>
+  </div>
+  <div class="user-chip" id="userChip">
+    <span id="hAv">🙂</span>
+    <span id="hNick">...</span>
+    <span style="font-size:.7rem;color:#555">✏️</span>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+  <div class="post-form">
+    <div class="form-top">
+      <div class="my-av" id="myAvForm">🙂</div>
+      <textarea id="postText" placeholder="¿Qué quieres compartir con el colegio?"></textarea>
+    </div>
+    <hr class="divider">
+    <div class="cats">
+      <button class="cat-btn active" data-cat="General">General</button>
+      <button class="cat-btn" data-cat="Noticias">📢 Noticias</button>
+      <button class="cat-btn" data-cat="Memes">😂 Memes</button>
+      <button class="cat-btn" data-cat="Quejas">😤 Quejas</button>
+      <button class="cat-btn" data-cat="Eventos">🎉 Eventos</button>
+      <button class="cat-btn" data-cat="Preguntas">🤔 Preguntas</button>
+    </div>
+
+    <!-- Audio: grabar o subir archivo -->
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button id="micBtn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:10px;color:#aaa;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;padding:9px;cursor:pointer;transition:all .2s;">🎙️ Grabar</button>
+        <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:10px;color:#aaa;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;padding:9px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;">
+          📁 Archivo
+          <input type="file" id="audioFile" accept="audio/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+        </label>
+      </div>
+      <div id="recBar" style="display:none;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:10px;padding:10px 14px;display:none;align-items:center;gap:10px;">
+        <span id="recDot" style="color:#e84d8a;font-size:1rem;">●</span>
+        <span id="recStatus" style="flex:1;font-size:0.8rem;color:#e84d8a;font-weight:700;">Grabando…</span>
+        <button id="stopBtn" style="background:#e84d8a;border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.78rem;padding:5px 14px;border-radius:8px;cursor:pointer;">⏹ Detener</button>
+      </div>
+      <div id="audioPreviewWrap" style="display:none;background:#1c1c1c;border:1px solid #2563eb44;border-radius:10px;padding:10px 14px;align-items:center;gap:8px;">
+        <span style="font-size:1rem;">🎵</span>
+        <audio id="audioPreview" controls style="flex:1;height:30px;accent-color:#2563eb;"></audio>
+        <button id="clearAudio" style="background:none;border:none;color:#e84d8a;font-size:1.1rem;cursor:pointer;flex-shrink:0;">✕</button>
+      </div>
+    </div>
+
+    <div class="form-bottom">
+      <button class="btn-pub" id="pubBtn">Publicar</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="ftab active" data-filter="all">Todos</button>
+    <button class="ftab" data-filter="Noticias">📢 Noticias</button>
+    <button class="ftab" data-filter="Memes">😂 Memes</button>
+    <button class="ftab" data-filter="Eventos">🎉 Eventos</button>
+    <button class="ftab" data-filter="Quejas">😤 Quejas</button>
+    <button class="ftab" data-filter="Preguntas">🤔 Preguntas</button>
+  </div>
+
+  <div id="loader"><div class="spinner"></div>Conectando…</div>
+  <div id="feed"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- Firebase como módulo pero funciones en window -->
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, orderBy, query,
+         doc, updateDoc, increment, arrayUnion, arrayRemove,
+         deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyDOQC-EQ1HxMONpf9Lm081gF6Q8c68LOsQ",
+  authDomain:        "foro-guillermo.firebaseapp.com",
+  projectId:         "foro-guillermo",
+  storageBucket:     "foro-guillermo.firebasestorage.app",
+  messagingSenderId: "1087768434743",
+  appId:             "1:1087768434743:web:d5141916eea45f3e94c7b2"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── Contraseña admin ──────────────────────────────────────────────────────────
+const PASS = 'guillermo2024';
+if(sessionStorage.getItem('gn_admin')==='1'){
+  document.getElementById('passBg').style.display='none';
+}
+document.getElementById('passBtn').addEventListener('click',()=>{
+  if(document.getElementById('passInput').value===PASS){
+    sessionStorage.setItem('gn_admin','1');
+    document.getElementById('passBg').style.display='none';
+  } else {
+    document.getElementById('passErr').style.display='block';
+    document.getElementById('passInput').value='';
+    document.getElementById('passInput').focus();
+  }
+});
+document.getElementById('passInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('passBtn').click();});
+document.getElementById('passInput').addEventListener('input',()=>{document.getElementById('passErr').style.display='none';});
+// ─────────────────────────────────────────────────────────────────────────────
+
+const AVATARS=['🐶','🐱','🦊','🐸','🐧','🦁','🐻','🦋','🦄','🐙','🦜','🐺','🐨','🦝','🐯','🐮','🐷','🐼','🐻‍❄️','🦔'];
+const COLORS=['#2563eb','#d97706','#db2777','#059669','#7c3aed','#0891b2','#dc2626','#65a30d','#f59e0b','#0369a1'];
+const CAT_COLORS={General:'#666',Noticias:'#2563eb',Memes:'#d97706',Quejas:'#db2777',Eventos:'#059669',Preguntas:'#7c3aed'};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+
+// ── Identidad ────────────────────────────────────────────────────────────────
+let myId=sessionStorage.getItem('gn_id');
+if(!myId){myId=Date.now().toString(36)+Math.random().toString(36).slice(2);sessionStorage.setItem('gn_id',myId);}
+let myAv  =sessionStorage.getItem('gn_av')   ||'';
+let myCol =sessionStorage.getItem('gn_col')  ||'';
+let myNick=sessionStorage.getItem('gn_nick') ||'';
+let selAv =myAv||AVATARS[0];
+
+function saveIdentity(nick,av,col){
+  myNick=nick; myAv=av; myCol=col;
+  sessionStorage.setItem('gn_nick',nick);
+  sessionStorage.setItem('gn_av',av);
+  sessionStorage.setItem('gn_col',col);
+  document.getElementById('hAv').textContent     =av;
+  document.getElementById('hNick').textContent   =nick;
+  document.getElementById('myAvForm').textContent=av;
+}
+
+// ── Avatar grid ───────────────────────────────────────────────────────────────
+function buildAvGrid(){
+  const grid=document.getElementById('avGrid');
+  grid.innerHTML='';
+  AVATARS.forEach(av=>{
+    const s=document.createElement('span');
+    s.className='av-opt'+(av===selAv?' sel':'');
+    s.textContent=av;
+    s.addEventListener('click',()=>{
+      document.querySelectorAll('.av-opt').forEach(x=>x.classList.remove('sel'));
+      s.classList.add('sel'); selAv=av;
+    });
+    grid.appendChild(s);
+  });
+}
+buildAvGrid();
+
+// ── Modal logic ───────────────────────────────────────────────────────────────
+if(myNick){
+  document.getElementById('modalBg').classList.add('hidden');
+  saveIdentity(myNick,myAv,myCol);
+}
+
+document.getElementById('btnEnter').addEventListener('click',()=>{
+  const name=document.getElementById('nickInput').value.trim();
+  if(!name){document.getElementById('nickInput').focus();showToast('Escribe un apodo 🙏');return;}
+  saveIdentity(name,selAv,rnd(COLORS));
+  document.getElementById('modalBg').classList.add('hidden');
+});
+
+document.getElementById('nickInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter') document.getElementById('btnEnter').click();
+});
+
+document.getElementById('userChip').addEventListener('click',()=>{
+  selAv=myAv||AVATARS[0];
+  buildAvGrid();
+  document.getElementById('nickInput').value=myNick;
+  document.getElementById('modalBg').classList.remove('hidden');
+});
+
+// ── Categorías ────────────────────────────────────────────────────────────────
+let selCat='General';
+document.querySelectorAll('.cat-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); selCat=btn.dataset.cat;
+  });
+});
+
+// ── Filtros ───────────────────────────────────────────────────────────────────
+let filter='all';
+document.querySelectorAll('.ftab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    filter=btn.dataset.filter;
+    document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderFeed();
+  });
+});
+
+// ── Publicar ──────────────────────────────────────────────────────────────────
+// ── Audio: grabar o seleccionar archivo ──────────────────────────────────────
+let audioB64 = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let recording = false;
+
+const micBtn       = document.getElementById('micBtn');
+const stopBtn      = document.getElementById('stopBtn');
+const recBar       = document.getElementById('recBar');
+const audioPreview = document.getElementById('audioPreview');
+const previewWrap  = document.getElementById('audioPreviewWrap');
+const clearAudio   = document.getElementById('clearAudio');
+const audioFile    = document.getElementById('audioFile');
+
+function showPreview(b64){
+  audioB64 = b64;
+  audioPreview.src = b64;
+  previewWrap.style.display = 'flex';
+  recBar.style.display = 'none';
+}
+
+function resetAudio(){
+  audioB64 = null;
+  audioPreview.src = '';
+  previewWrap.style.display = 'none';
+  recBar.style.display = 'none';
+  audioFile.value = '';
+  recording = false;
+  if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+}
+
+// Grabar con micrófono
+micBtn.addEventListener('click', async () => {
+  if(recording) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    audioChunks = [];
+    const options = MediaRecorder.isTypeSupported('audio/webm') ? {mimeType:'audio/webm'} :
+                    MediaRecorder.isTypeSupported('audio/mp4')  ? {mimeType:'audio/mp4'}  : {};
+    mediaRecorder = new MediaRecorder(stream, options);
+    mediaRecorder.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t=>t.stop());
+      const blob = new Blob(audioChunks, {type: mediaRecorder.mimeType||'audio/webm'});
+      if(blob.size > 600*1024){ showToast('Audio muy largo, máx ~30 seg 🙏'); resetAudio(); return; }
+      const reader = new FileReader();
+      reader.onload = ev => showPreview(ev.target.result);
+      reader.readAsDataURL(blob);
+      recording = false;
+    };
+    mediaRecorder.start(100);
+    recording = true;
+    recBar.style.display = 'flex';
+    previewWrap.style.display = 'none';
+  } catch(e) {
+    showToast('No se pudo acceder al micrófono — usa "Archivo" 🎵');
+  }
+});
+
+stopBtn.addEventListener('click', () => {
+  if(mediaRecorder && recording) mediaRecorder.stop();
+});
+
+// Seleccionar archivo
+audioFile.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 600*1024){ showToast('Archivo muy grande, máx 600KB 🙏'); audioFile.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = ev => showPreview(ev.target.result);
+  reader.readAsDataURL(file);
+});
+
+clearAudio.addEventListener('click', resetAudio);
+
+document.getElementById('pubBtn').addEventListener('click',async()=>{
+  const text=document.getElementById('postText').value.trim();
+  if(!text&&!audioB64){showToast('Escribe algo o sube un audio 🙏');return;}
+  if(!myNick){
+    selAv=AVATARS[0]; buildAvGrid();
+    document.getElementById('modalBg').classList.remove('hidden');
+    return;
+  }
+  const btn=document.getElementById('pubBtn');
+  btn.disabled=true; btn.textContent='Publicando…';
+  await addDoc(collection(db,'gn_posts'),{
+    text,audioB64:audioB64||null,cat:selCat,authorId:myId,avatar:myAv,color:myCol,nick:myNick,
+    likes:0,likedBy:[],comments:[],createdAt:serverTimestamp()
+  });
+  document.getElementById('postText').value='';
+  resetAudio();
+  btn.disabled=false; btn.textContent='Publicar';
+  showToast('¡Publicado! 🎉');
+});
+
+// ── Firebase listener ─────────────────────────────────────────────────────────
+let cache={};
+const postsRef=collection(db,'gn_posts');
+onSnapshot(query(postsRef,orderBy('createdAt','desc')),snap=>{
+  snap.docChanges().forEach(ch=>{
+    if(ch.type==='removed') delete cache[ch.doc.id];
+    else cache[ch.doc.id]={id:ch.doc.id,...ch.doc.data()};
+    if(ch.type==='modified') liveUpdate(ch.doc.id,ch.doc.data());
+  });
+  renderFeed();
+  document.getElementById('loader').style.display='none';
+});
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderFeed(){
+  const feed=document.getElementById('feed');
+  let list=Object.values(cache).sort((a,b)=>ts(b)-ts(a));
+  if(filter!=='all') list=list.filter(p=>p.cat===filter);
+  if(!list.length){feed.innerHTML='<div class="empty"><div>📭</div><p>¡Sé el primero en publicar!</p></div>';return;}
+  const existing=new Set([...feed.querySelectorAll('.post-card')].map(c=>c.id.slice(3)));
+  list.forEach(p=>{
+    if(!existing.has(p.id)){
+      const el=document.createElement('div');
+      el.innerHTML=buildCard(p);
+      const card=el.firstChild;
+      feed.insertBefore(card,feed.firstChild);
+      // attach listeners
+      card.querySelector('.like-btn').addEventListener('click',()=>toggleLike(p.id));
+      card.querySelector('.cmt-btn').addEventListener('click',()=>toggleComments(p.id));
+      card.querySelector('.del-btn').addEventListener('click',()=>deletePost(p.id));
+      card.querySelector('.send-btn').addEventListener('click',()=>addComment(p.id));
+      card.querySelector('.c-input').addEventListener('keydown',e=>{if(e.key==='Enter')addComment(p.id);});
+    }
+  });
+  feed.querySelectorAll('.post-card').forEach(c=>{if(!cache[c.id.slice(3)])c.remove();});
+}
+
+function ts(p){return p.createdAt?.toMillis?.()??p.createdAt??0;}
+function ago(t){
+  if(!t)return'ahora';
+  const d=Date.now()-ts({createdAt:t});
+  if(d<60000)return'ahora mismo';
+  if(d<3600000)return`hace ${Math.floor(d/60000)} min`;
+  if(d<86400000)return`hace ${Math.floor(d/3600000)} h`;
+  return`hace ${Math.floor(d/86400000)} d`;
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function buildCard(p){
+  const liked=(p.likedBy||[]).includes(myId);
+  const cc=CAT_COLORS[p.cat]||'#666';
+  const comms=(p.comments||[]).sort((a,b)=>a.ts-b.ts);
+  return`<div class="post-card" id="pc-${p.id}">
+    <div class="post-body">
+      <div class="post-meta">
+        <div class="avatar" style="background:${p.color}22">${p.avatar}</div>
+        <div class="post-info">
+          <div class="post-nick" style="color:${p.color}">${esc(p.nick)}</div>
+          <div class="post-time">${ago(p.createdAt)}</div>
+        </div>
+        <span class="post-cat" style="background:${cc}22;color:${cc};border:1px solid ${cc}44">${esc(p.cat)}</span>
+      </div>
+      <div class="post-text">${esc(p.text)}</div>
+      ${p.audioB64?`<div class="audio-wrap"><span>🎵</span><audio class="audio-player" controls src="${p.audioB64}"></audio></div>`:''}
+      <div class="post-actions">
+        <button class="act-btn like-btn ${liked?'liked':''}" id="lb-${p.id}">
+          <span id="lh-${p.id}">${liked?'❤️':'🤍'}</span><span id="lc-${p.id}">${p.likes||0}</span>
+        </button>
+        <button class="act-btn cmt-btn">💬 <span id="cc-${p.id}">${comms.length}</span></button>
+        <button class="act-btn del-btn" style="margin-left:auto;color:#555">🗑️</button>
+      </div>
+    </div>
+    <div class="comments-section" id="cs-${p.id}" style="display:none">
+      <div class="comments-list" id="cl-${p.id}">${comms.map(buildCmt).join('')}</div>
+      <div class="comment-form">
+        <input class="c-input" placeholder="Comenta anónimamente…" maxlength="400">
+        <button class="btn-send send-btn">➤</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildCmt(c){
+  return`<div class="comment">
+    <div class="c-av" style="background:${c.color}22">${(c.nick||'?').split(' ')[0]}</div>
+    <div class="c-bubble">
+      <div class="c-nick" style="color:${c.color}">${esc(c.nick)}</div>
+      <div class="c-text">${esc(c.text)}</div>
+    </div>
+  </div>`;
+}
+
+function liveUpdate(id,data){
+  const liked=(data.likedBy||[]).includes(myId);
+  const lc=document.getElementById('lc-'+id);if(lc)lc.textContent=data.likes||0;
+  const lh=document.getElementById('lh-'+id);if(lh)lh.textContent=liked?'❤️':'🤍';
+  const lb=document.getElementById('lb-'+id);if(lb){liked?lb.classList.add('liked'):lb.classList.remove('liked');}
+  const ccEl=document.getElementById('cc-'+id);if(ccEl)ccEl.textContent=(data.comments||[]).length;
+  const cl=document.getElementById('cl-'+id);
+  if(cl)cl.innerHTML=(data.comments||[]).sort((a,b)=>a.ts-b.ts).map(buildCmt).join('');
+}
+
+async function toggleLike(id){
+  const p=cache[id];if(!p)return;
+  const liked=(p.likedBy||[]).includes(myId);
+  await updateDoc(doc(db,'gn_posts',id),{
+    likes:increment(liked?-1:1),
+    likedBy:liked?arrayRemove(myId):arrayUnion(myId)
+  });
+}
+
+async function addComment(id){
+  const inp=document.querySelector(`#cs-${id} .c-input`);
+  const text=inp.value.trim();if(!text)return;
+  if(!myNick){showToast('Primero elige tu nombre');return;}
+  inp.value='';
+  await updateDoc(doc(db,'gn_posts',id),{
+    comments:arrayUnion({nick:myNick,color:myCol,text,ts:Date.now()})
+  });
+}
+
+function toggleComments(id){
+  const s=document.getElementById('cs-'+id);
+  s.style.display=s.style.display==='none'?'block':'none';
+}
+
+async function deletePost(id){
+  if(!confirm('¿Borrar esta publicación?')) return;
+  await deleteDoc(doc(db,'gn_posts',id));
+  showToast('Publicación borrada 🗑️');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
